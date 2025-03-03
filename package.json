@@ -1,0 +1,19 @@
+{
+  "name": "dao-project",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "contracts": "yarn workspace dao-contracts",
+    "frontend": "yarn workspace dao-frontend",
+    "indexer": "yarn workspace dao-indexer",
+    "docs": "yarn workspace dao-docs",
+    "test": "yarn workspaces run test",
+    "build": "yarn workspaces run build"
+  },
+  "devDependencies": {
+    "lerna": "^6.6.2"
+  }
+}
