@@ -63,6 +63,43 @@ yarn frontend start
 yarn frontend build
 ```
 
+## Collaboration Workflow
+
+This project follows a Git Flow-inspired branching strategy:
+
+### Main Branches
+
+- **main**: Production-ready code
+- **develop**: Latest development changes
+
+### Feature Branches
+
+- **feature/contracts**: For smart contract development
+- **feature/frontend**: For frontend development
+- **feature/indexer**: For indexer development
+- **feature/docs**: For documentation updates
+
+### Workflow Steps
+
+1. **Pick an issue** from the GitHub Issues board
+2. **Create a branch** from the appropriate feature branch
+   ```bash
+   git checkout feature/contracts
+   git pull
+   git checkout -b feature/contracts-your-feature-name
+   ```
+3. **Make your changes** and commit them
+4. **Push your branch** to GitHub
+   ```bash
+   git push -u origin feature/contracts-your-feature-name
+   ```
+5. **Create a Pull Request** to merge into the appropriate feature branch
+6. After review and approval, your changes will be merged
+
+## Continuous Integration
+
+This project uses GitHub Actions for continuous integration. All pull requests are automatically tested before they can be merged.
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
