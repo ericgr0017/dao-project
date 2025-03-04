@@ -1,6 +1,6 @@
 /* Governance page styles */
 .governance-page {
-  padding: 1rem 0;
+  padding: 2rem;
 }
 
 .page-header {
@@ -8,30 +8,78 @@
   text-align: center;
 }
 
+.page-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
 .page-description {
-  color: #666666;
+  font-size: 1.1rem;
+  color: #666;
   max-width: 800px;
+  margin: 0 auto;
+}
+
+.governance-content {
+  max-width: 1200px;
   margin: 0 auto;
 }
 
 .governance-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 1.5rem;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 .governance-card {
-  background-color: #ffffff;
+  background-color: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.governance-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+.governance-card h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.governance-card p {
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.token-stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.token-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.token-stat:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-weight: 500;
+  color: #555;
+}
+
+.value {
+  font-weight: 600;
+  color: #333;
 }
 
 .form-group {
@@ -42,68 +90,116 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
+  color: #555;
 }
 
 .form-group input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #e1e4e8;
+  border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #2196f3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+}
+
+.form-group input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 1rem;
 }
 
 .submit-button {
-  background-color: #3a6ea5;
+  padding: 0.75rem 1.5rem;
+  background-color: #2196f3;
   color: white;
   border: none;
   border-radius: 4px;
-  padding: 0.75rem 1.5rem;
   font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
 .submit-button:hover {
-  background-color: #004e98;
+  background-color: #1976d2;
 }
 
-.token-stats {
-  margin-bottom: 1.5rem;
+.submit-button:disabled {
+  background-color: #bdbdbd;
+  cursor: not-allowed;
 }
 
-.token-stat {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e1e4e8;
-}
-
-.token-stat:last-child {
-  border-bottom: none;
-}
-
-.token-stat .label {
+.cancel-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #f5f5f5;
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
   font-weight: 500;
-  color: #666666;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.token-stat .value {
-  font-weight: 600;
+.cancel-button:hover {
+  background-color: #e0e0e0;
 }
 
-/* Responsive styles */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Transaction message styling */
+.transaction-message {
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.transaction-message.success {
+  background-color: #e8f5e9;
+  color: #388e3c;
+  border-left: 4px solid #4caf50;
+}
+
+.transaction-message.error {
+  background-color: #ffebee;
+  color: #d32f2f;
+  border-left: 4px solid #f44336;
+}
+
+.transaction-message.info {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border-left: 4px solid #2196f3;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .governance-grid {
     grid-template-columns: 1fr;
   }
   
-  .form-actions {
-    justify-content: center;
+  .governance-page {
+    padding: 1rem;
+  }
+  
+  .page-header h1 {
+    font-size: 2rem;
   }
 } 

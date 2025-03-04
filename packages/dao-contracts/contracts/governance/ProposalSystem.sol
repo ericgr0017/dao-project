@@ -1,246 +1,259 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/governance/Governor.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
-import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "../reputation/ReputationSystem.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title ProposalSystem
- * @dev Governance system for the DAO with quadratic voting and reputation-based weighting
+ * @dev A simplified governance contract that doesn't use OpenZeppelin Governor
+ * to avoid the contract size limitation
  */
-contract ProposalSystem is 
-    Governor, 
-    GovernorCountingSimple,
-    GovernorVotes,
-    GovernorVotesQuorumFraction,
-    GovernorTimelockControl 
-{
-    using SafeMath for uint256;
+contract ProposalSystem is Ownable {
+    // Proposal states
+    enum ProposalState {
+        Pending,
+        Active,
+        Canceled,
+        Defeated,
+        Succeeded,
+        Executed
+    }
+
+    // Proposal structure
+    struct Proposal {
+        uint256 id;
+        address proposer;
+        uint256 startBlock;
+        uint256 endBlock;
+        string description;
+        uint256 forVotes;
+        uint256 againstVotes;
+        bool executed;
+        bool canceled;
+        mapping(address => bool) hasVoted;
+    }
+
+    // Vote types
+    enum VoteType {
+        Against,
+        For
+    }
+
+    // State variables
+    IERC20 public token;
+    address public treasury;
+    uint256 public quorumVotes; // Fixed number of votes required for quorum
+    uint256 public votingPeriod; // Number of blocks for voting
+    uint256 public votingDelay; // Number of blocks before voting starts
+    uint256 public proposalThreshold; // Minimum tokens needed to submit proposal
     
-    // Proposal stake amount
-    uint256 public proposalStake; 
-    
-    // Reputation system contract
-    ReputationSystem public reputationSystem;
-    
-    // Reputation weight factor (0-100)
-    // 0 = only token voting, 100 = equal weight between tokens and reputation
-    uint256 public reputationWeightFactor;
-    
-    // Quadratic voting factor (0-100)
-    // 0 = linear voting, 100 = fully quadratic
-    uint256 public quadraticVotingFactor;
-    
-    // Mapping to track if a user has voted on a proposal
-    mapping(uint256 => mapping(address => bool)) private _hasVoted;
-    
-    // Mapping to track vote weights
-    mapping(uint256 => mapping(address => uint256)) private _voteWeights;
-    
+    uint256 public proposalCount;
+    mapping(uint256 => Proposal) public proposals;
+
     // Events
     event ProposalCreated(
         uint256 proposalId,
         address proposer,
-        string title,
-        string description,
-        uint256 stake
+        uint256 startBlock,
+        uint256 endBlock,
+        string description
     );
     
     event VoteCast(
-        address indexed voter,
+        address voter,
         uint256 proposalId,
         uint8 support,
-        uint256 tokenWeight,
-        uint256 reputationWeight,
-        uint256 quadraticWeight
+        uint256 weight
     );
     
+    event ProposalExecuted(uint256 proposalId);
+    event ProposalCanceled(uint256 proposalId);
+
     /**
-     * @dev Constructor for the ProposalSystem
-     * @param _token Governance token
-     * @param _timelock Timelock controller
-     * @param _quorumPercentage Percentage of total supply needed for quorum
-     * @param _votingPeriod Duration of voting in blocks
-     * @param _votingDelay Delay before voting starts in blocks
-     * @param _proposalStake Amount of tokens required to submit a proposal
-     * @param _reputationSystem Address of the reputation system contract
-     * @param _reputationWeightFactor Weight factor for reputation (0-100)
-     * @param _quadraticVotingFactor Weight factor for quadratic voting (0-100)
+     * @dev Constructor
      */
     constructor(
-        ERC20Votes _token,
-        TimelockController _timelock,
+        IERC20 _token,
+        address _treasury,
         uint256 _quorumPercentage,
         uint256 _votingPeriod,
         uint256 _votingDelay,
-        uint256 _proposalStake,
-        ReputationSystem _reputationSystem,
-        uint256 _reputationWeightFactor,
-        uint256 _quadraticVotingFactor
-    )
-        Governor("Problem Solving DAO")
-        GovernorVotes(_token)
-        GovernorVotesQuorumFraction(_quorumPercentage)
-        GovernorTimelockControl(_timelock)
-    {
-        require(_reputationWeightFactor <= 100, "Reputation weight factor too high");
-        require(_quadraticVotingFactor <= 100, "Quadratic voting factor too high");
+        uint256 _proposalThreshold
+    ) {
+        token = _token;
+        treasury = _treasury;
         
-        proposalStake = _proposalStake;
-        reputationSystem = _reputationSystem;
-        reputationWeightFactor = _reputationWeightFactor;
-        quadraticVotingFactor = _quadraticVotingFactor;
+        // Convert percentage to absolute number (assuming token has 18 decimals)
+        quorumVotes = 10 * 10**18; // Fixed at 10 tokens for simplicity
+        
+        votingPeriod = _votingPeriod;
+        votingDelay = _votingDelay;
+        proposalThreshold = _proposalThreshold;
     }
-    
+
     /**
-     * @dev Override the castVote function to implement quadratic voting and reputation weighting
-     * @param proposalId ID of the proposal
-     * @param support Support value for the vote (0=against, 1=for, 2=abstain)
+     * @dev Create a new proposal
      */
-    function castVote(uint256 proposalId, uint8 support) 
-        public 
-        override 
-        returns (uint256) 
-    {
-        require(!_hasVoted[proposalId][msg.sender], "Already voted");
-        require(state(proposalId) == ProposalState.Active, "Proposal not active");
-        
-        // Get token-based voting weight
-        uint256 tokenWeight = getVotes(msg.sender, proposalSnapshot(proposalId));
-        
-        // Get reputation-based voting weight
-        uint256 reputationWeight = reputationSystem.getReputation(msg.sender);
-        
-        // Calculate combined weight with reputation factor
-        uint256 combinedWeight = tokenWeight;
-        if (reputationWeightFactor > 0 && reputationWeight > 0) {
-            // Scale reputation to be comparable to token weight
-            uint256 scaledReputation = reputationWeight.mul(tokenWeight).div(
-                reputationSystem.getTotalReputation()
-            );
-            
-            // Apply reputation weight factor
-            uint256 reputationComponent = scaledReputation.mul(reputationWeightFactor).div(100);
-            combinedWeight = tokenWeight.add(reputationComponent);
-        }
-        
-        // Apply quadratic voting if factor > 0
-        uint256 finalWeight = combinedWeight;
-        if (quadraticVotingFactor > 0 && combinedWeight > 0) {
-            // Calculate square root component
-            uint256 sqrtWeight = sqrt(combinedWeight);
-            
-            // Mix linear and quadratic based on factor
-            uint256 quadraticComponent = sqrtWeight.mul(quadraticVotingFactor).div(100);
-            uint256 linearComponent = combinedWeight.mul(100 - quadraticVotingFactor).div(100);
-            
-            finalWeight = linearComponent.add(quadraticComponent);
-        }
-        
-        // Record vote
-        _countVote(proposalId, msg.sender, support, finalWeight);
-        _hasVoted[proposalId][msg.sender] = true;
-        _voteWeights[proposalId][msg.sender] = finalWeight;
-        
-        emit VoteCast(
-            msg.sender,
-            proposalId,
-            support,
-            tokenWeight,
-            reputationWeight,
-            finalWeight
+    function propose(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) public returns (uint256) {
+        require(
+            token.balanceOf(msg.sender) >= proposalThreshold,
+            "ProposalSystem: proposer votes below proposal threshold"
         );
         
-        return finalWeight;
+        require(targets.length > 0, "ProposalSystem: empty proposal");
+        require(targets.length == values.length && targets.length == calldatas.length, 
+                "ProposalSystem: invalid proposal length");
+                
+        uint256 proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description)));
+        
+        Proposal storage proposal = proposals[proposalId];
+        require(proposal.proposer == address(0), "ProposalSystem: proposal already exists");
+        
+        uint256 startBlock = block.number + votingDelay;
+        uint256 endBlock = startBlock + votingPeriod;
+        
+        proposal.id = proposalId;
+        proposal.proposer = msg.sender;
+        proposal.startBlock = startBlock;
+        proposal.endBlock = endBlock;
+        proposal.description = description;
+        proposal.forVotes = 0;
+        proposal.againstVotes = 0;
+        proposal.executed = false;
+        proposal.canceled = false;
+        
+        proposalCount++;
+        
+        emit ProposalCreated(
+            proposalId,
+            msg.sender,
+            startBlock,
+            endBlock,
+            description
+        );
+        
+        return proposalId;
     }
     
     /**
-     * @dev Get the voting weight for a specific vote
-     * @param proposalId ID of the proposal
-     * @param voter Address of the voter
-     * @return Weight of the vote
+     * @dev Cast a vote on a proposal
      */
-    function getVoteWeight(uint256 proposalId, address voter) 
-        external 
-        view 
-        returns (uint256) 
-    {
-        require(_hasVoted[proposalId][voter], "Has not voted");
-        return _voteWeights[proposalId][voter];
-    }
-    
-    /**
-     * @dev Check if an address has voted on a proposal
-     * @param proposalId ID of the proposal
-     * @param voter Address of the voter
-     * @return True if the address has voted
-     */
-    function hasVoted(uint256 proposalId, address voter) 
-        public 
-        view 
-        override 
-        returns (bool) 
-    {
-        return _hasVoted[proposalId][voter];
-    }
-    
-    /**
-     * @dev Set the reputation weight factor
-     * @param newFactor New reputation weight factor (0-100)
-     */
-    function setReputationWeightFactor(uint256 newFactor) external onlyGovernance {
-        require(newFactor <= 100, "Factor too high");
-        reputationWeightFactor = newFactor;
-    }
-    
-    /**
-     * @dev Set the quadratic voting factor
-     * @param newFactor New quadratic voting factor (0-100)
-     */
-    function setQuadraticVotingFactor(uint256 newFactor) external onlyGovernance {
-        require(newFactor <= 100, "Factor too high");
-        quadraticVotingFactor = newFactor;
-    }
-    
-    /**
-     * @dev Set the proposal stake amount
-     * @param newStake New stake amount
-     */
-    function setProposalStake(uint256 newStake) external onlyGovernance {
-        proposalStake = newStake;
-    }
-    
-    /**
-     * @dev Calculate the square root of a number
-     * @param x The number to calculate the square root of
-     * @return y The square root of x
-     */
-    function sqrt(uint256 x) internal pure returns (uint256 y) {
-        uint256 z = (x + 1) / 2;
-        y = x;
-        while (z < y) {
-            y = z;
-            z = (x / z + z) / 2;
+    function castVote(uint256 proposalId, uint8 support) public returns (uint256) {
+        require(state(proposalId) == ProposalState.Active, "ProposalSystem: proposal not active");
+        require(support <= uint8(VoteType.For), "ProposalSystem: invalid vote type");
+        
+        Proposal storage proposal = proposals[proposalId];
+        require(!proposal.hasVoted[msg.sender], "ProposalSystem: vote already cast");
+        
+        uint256 votes = token.balanceOf(msg.sender);
+        
+        if (support == uint8(VoteType.Against)) {
+            proposal.againstVotes += votes;
+        } else if (support == uint8(VoteType.For)) {
+            proposal.forVotes += votes;
         }
+        
+        proposal.hasVoted[msg.sender] = true;
+        
+        emit VoteCast(msg.sender, proposalId, support, votes);
+        
+        return votes;
     }
     
-    // Override required functions
-    
-    function votingDelay() public view override returns (uint256) {
-        return 1; // 1 block
+    /**
+     * @dev Execute a successful proposal
+     */
+    function execute(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 descriptionHash
+    ) public returns (uint256) {
+        uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash);
+        
+        require(state(proposalId) == ProposalState.Succeeded, "ProposalSystem: proposal not successful");
+        
+        Proposal storage proposal = proposals[proposalId];
+        proposal.executed = true;
+        
+        for (uint256 i = 0; i < targets.length; i++) {
+            (bool success, ) = targets[i].call{value: values[i]}(calldatas[i]);
+            require(success, "ProposalSystem: transaction execution reverted");
+        }
+        
+        emit ProposalExecuted(proposalId);
+        
+        return proposalId;
     }
     
-    function votingPeriod() public view override returns (uint256) {
-        return 45818; // ~1 week
+    /**
+     * @dev Cancel a proposal
+     */
+    function cancel(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 descriptionHash
+    ) public returns (uint256) {
+        uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash);
+        
+        Proposal storage proposal = proposals[proposalId];
+        require(proposal.proposer == msg.sender, "ProposalSystem: only proposer can cancel");
+        require(state(proposalId) != ProposalState.Executed, "ProposalSystem: cannot cancel executed proposal");
+        
+        proposal.canceled = true;
+        
+        emit ProposalCanceled(proposalId);
+        
+        return proposalId;
     }
     
-    function proposalThreshold() public view override returns (uint256) {
-        return proposalStake;
+    /**
+     * @dev Get the state of a proposal
+     */
+    function state(uint256 proposalId) public view returns (ProposalState) {
+        Proposal storage proposal = proposals[proposalId];
+        
+        if (proposal.canceled) {
+            return ProposalState.Canceled;
+        }
+        
+        if (proposal.executed) {
+            return ProposalState.Executed;
+        }
+        
+        uint256 currentBlock = block.number;
+        
+        if (currentBlock < proposal.startBlock) {
+            return ProposalState.Pending;
+        }
+        
+        if (currentBlock <= proposal.endBlock) {
+            return ProposalState.Active;
+        }
+        
+        if (proposal.forVotes <= proposal.againstVotes || proposal.forVotes < quorumVotes) {
+            return ProposalState.Defeated;
+        }
+        
+        return ProposalState.Succeeded;
+    }
+    
+    /**
+     * @dev Hash a proposal to get its ID
+     */
+    function hashProposal(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 descriptionHash
+    ) public pure returns (uint256) {
+        return uint256(keccak256(abi.encode(targets, values, calldatas, descriptionHash)));
     }
 } 

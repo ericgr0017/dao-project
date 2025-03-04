@@ -11,6 +11,8 @@ import './App.css';
 import Navigation from './components/Navigation';
 import { Web3Provider } from './contexts/Web3Context';
 
+// Import Home page
+import Home from './pages/Home';
 // Import full Dashboard component
 import Dashboard from './pages/Dashboard';
 // Import Governance component
@@ -51,7 +53,8 @@ function App() {
             <Navigation />
             <main className="main-content">
               <Routes>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/governance" element={<Governance />} />
                 <Route path="/proposals" element={<Proposals />} />
                 <Route path="/treasury" element={<Treasury />} />
@@ -61,7 +64,7 @@ function App() {
             </main>
             <footer className="footer">
               <div className="footer-content">
-                <p>DAO Project &copy; {new Date().getFullYear()}</p>
+                <p>Humanity DAO &copy; {new Date().getFullYear()}</p>
               </div>
             </footer>
           </Router>

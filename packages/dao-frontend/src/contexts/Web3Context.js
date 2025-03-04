@@ -6,7 +6,6 @@ import { useAccount, useNetwork, usePublicClient, useWalletClient, useConnect, u
 import GovernanceTokenABI from '../contracts/GovernanceToken.json';
 import ProposalSystemABI from '../contracts/ProposalSystem.json';
 import TreasuryABI from '../contracts/Treasury.json';
-import ReputationSystemABI from '../contracts/ReputationSystem.json';
 
 // Create context
 const Web3Context = createContext();
@@ -15,24 +14,21 @@ const Web3Context = createContext();
 const CONTRACT_ADDRESSES = {
   // Localhost/Hardhat
   1337: {
-    governanceToken: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
-    proposalSystem: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
-    treasury: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
-    reputationSystem: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9'
+    governanceToken: '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707',
+    proposalSystem: '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853',
+    treasury: '0x0165878A594ca255338adfa4d48449f69242Eb8F'
   },
   // Sepolia testnet
   11155111: {
-    governanceToken: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
-    proposalSystem: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
-    treasury: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
-    reputationSystem: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9'
+    governanceToken: '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707',
+    proposalSystem: '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853',
+    treasury: '0x0165878A594ca255338adfa4d48449f69242Eb8F'
   },
   // Ethereum mainnet - using mock addresses for development
   1: {
-    governanceToken: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
-    proposalSystem: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
-    treasury: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
-    reputationSystem: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9'
+    governanceToken: '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707',
+    proposalSystem: '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853',
+    treasury: '0x0165878A594ca255338adfa4d48449f69242Eb8F'
   }
 };
 
@@ -245,14 +241,6 @@ export const Web3Provider = ({ children }) => {
             allocateFunds: () => Promise.resolve({ wait: () => Promise.resolve() }),
             allocateTokens: () => Promise.resolve({ wait: () => Promise.resolve() }),
             processCrowdfunding: () => Promise.resolve({ wait: () => Promise.resolve() })
-          },
-          reputationSystem: { 
-            isDevelopment: true,
-            getReputation: () => Promise.resolve(ethers.BigNumber.from('800')),
-            getContributionByType: () => Promise.resolve(ethers.BigNumber.from('200')),
-            getTotalReputation: () => Promise.resolve(ethers.BigNumber.from('10000')),
-            addReputation: () => Promise.resolve({ wait: () => Promise.resolve() }),
-            hasRole: () => Promise.resolve(true)
           }
         });
       }
@@ -293,11 +281,23 @@ export const Web3Provider = ({ children }) => {
             signer || provider
           );
           
-          const reputationSystem = new ethers.Contract(
-            addresses.reputationSystem,
-            ReputationSystemABI.abi,
-            signer || provider
-          );
+          // Create a mock ReputationSystem since we don't have it in our simplified implementation
+          const reputationSystem = {
+            isDevelopment: true,
+            getReputation: (address) => Promise.resolve(ethers.BigNumber.from('800')),
+            getContributionByType: (address, type) => Promise.resolve(ethers.BigNumber.from('200')),
+            getTotalReputation: () => Promise.resolve(ethers.BigNumber.from('10000')),
+            addReputation: (address, amount, type, description) => Promise.resolve({ wait: () => Promise.resolve() }),
+            hasRole: (role, address) => Promise.resolve(true),
+            getContributionCount: (address) => Promise.resolve(ethers.BigNumber.from('5')),
+            getAllContributions: (address) => Promise.resolve([
+              { id: 1, contributor: address, amount: 200, contributionType: 0, description: 'Code contribution', timestamp: Date.now() - 86400000 * 5 },
+              { id: 2, contributor: address, amount: 150, contributionType: 1, description: 'Community management', timestamp: Date.now() - 86400000 * 3 },
+              { id: 3, contributor: address, amount: 300, contributionType: 2, description: 'Documentation', timestamp: Date.now() - 86400000 * 1 },
+              { id: 4, contributor: address, amount: 100, contributionType: 0, description: 'Bug fix', timestamp: Date.now() - 86400000 * 0.5 },
+              { id: 5, contributor: address, amount: 50, contributionType: 3, description: 'Marketing', timestamp: Date.now() }
+            ])
+          };
           
           // Set contracts in state
           if (isMounted.current) {
@@ -344,8 +344,15 @@ export const Web3Provider = ({ children }) => {
           // Get token balance
           const tokenBalance = await contracts.governanceToken.balanceOf(address);
           
-          // Get staked balance
-          const stakedBalance = await contracts.governanceToken.stakedBalanceOf(address);
+          // Get staked balance - check if the method exists first
+          let stakedBalance = ethers.BigNumber.from('0');
+          if (contracts.governanceToken.stakedBalanceOf) {
+            try {
+              stakedBalance = await contracts.governanceToken.stakedBalanceOf(address);
+            } catch (err) {
+              console.warn('stakedBalanceOf method not available:', err.message);
+            }
+          }
           
           // Get reputation
           const reputation = await contracts.reputationSystem.getReputation(address);
@@ -395,8 +402,7 @@ export const Web3Provider = ({ children }) => {
     CONTRACT_ADDRESSES[chainId] = {
       governanceToken: deploymentInfo.governanceToken,
       proposalSystem: deploymentInfo.proposalSystem,
-      treasury: deploymentInfo.treasury,
-      reputationSystem: deploymentInfo.reputationSystem
+      treasury: deploymentInfo.treasury
     };
   };
   

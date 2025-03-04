@@ -33,8 +33,8 @@ const Navigation = () => {
   return (
     <nav className="navigation">
       <div className="nav-container">
-        <div className="nav-logo">
-          <span className="logo-text">DAO Project</span>
+        <div className="nav-logo" onClick={() => handleNavigation('/')}>
+          <span className="logo-text">Humanity DAO</span>
         </div>
         
         <button 
@@ -50,6 +50,14 @@ const Navigation = () => {
             <button 
               className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
               onClick={() => handleNavigation('/')}
+            >
+              Home
+            </button>
+          </li>
+          <li className="nav-item">
+            <button 
+              className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}
+              onClick={() => handleNavigation('/dashboard')}
             >
               Dashboard
             </button>
