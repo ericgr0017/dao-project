@@ -11,9 +11,14 @@
     "indexer": "yarn workspace dao-indexer",
     "docs": "yarn workspace dao-docs",
     "test": "yarn workspaces run test",
-    "build": "yarn workspaces run build"
+    "build": "yarn workspaces run build",
+    "start-frontend": "cross-env NODE_OPTIONS=--max_old_space_size=4096 yarn workspace dao-frontend start"
   },
   "devDependencies": {
-    "lerna": "^6.6.2"
+    "lerna": "^6.6.2",
+    "cross-env": "^7.0.3"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1"
   }
 }
