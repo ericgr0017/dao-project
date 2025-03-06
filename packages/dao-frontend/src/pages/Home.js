@@ -376,9 +376,14 @@ const Home = () => {
             A community-driven organization leveraging blockchain technology to fund, develop, and implement 
             solutions to humanity's most pressing challenges.
           </p>
-          <button className="cta-button" onClick={handleGetStarted}>
-            Get Started
-          </button>
+          <div className="hero-buttons">
+            <button className="cta-button" onClick={handleGetStarted}>
+              Get Started
+            </button>
+            <button className="secondary-button" onClick={() => navigate('/about')}>
+              Learn More
+            </button>
+          </div>
         </div>
       </section>
 

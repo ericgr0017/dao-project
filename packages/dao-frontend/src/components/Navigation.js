@@ -64,34 +64,74 @@ const Navigation = () => {
           </li>
           <li className="nav-item">
             <button 
-              className={`nav-link ${location.pathname === '/governance' ? 'active' : ''}`}
-              onClick={() => handleNavigation('/governance')}
+              className={`nav-link ${location.pathname === '/analytics' ? 'active' : ''}`}
+              onClick={() => handleNavigation('/analytics')}
             >
-              Governance
+              My Rewards
             </button>
           </li>
           <li className="nav-item">
             <button 
-              className={`nav-link ${location.pathname === '/proposals' ? 'active' : ''}`}
-              onClick={() => handleNavigation('/proposals')}
+              className={`nav-link ${location.pathname === '/social' ? 'active' : ''}`}
+              onClick={() => handleNavigation('/social')}
             >
-              Proposals
+              Social
             </button>
           </li>
           <li className="nav-item">
             <button 
-              className={`nav-link ${location.pathname === '/treasury' ? 'active' : ''}`}
-              onClick={() => handleNavigation('/treasury')}
+              className={`nav-link ${location.pathname.startsWith('/challenges') ? 'active' : ''}`}
+              onClick={() => handleNavigation('/challenges')}
             >
-              Treasury
+              Challenges
+            </button>
+          </li>
+          <li className="nav-item dropdown">
+            <button 
+              className={`nav-link ${location.pathname.startsWith('/solutions') ? 'active' : ''}`}
+              onClick={() => handleNavigation('/solutions')}
+            >
+              Solutions
             </button>
           </li>
           <li className="nav-item">
             <button 
-              className={`nav-link ${location.pathname === '/reputation' ? 'active' : ''}`}
-              onClick={() => handleNavigation('/reputation')}
+              className={`nav-link ${location.pathname === '/learning' ? 'active' : ''}`}
+              onClick={() => handleNavigation('/learning')}
             >
-              Reputation
+              Learning
+            </button>
+          </li>
+          <li className="nav-item">
+            <button 
+              className={`nav-link ${location.pathname === '/benefits' ? 'active' : ''}`}
+              onClick={() => handleNavigation('/benefits')}
+            >
+              Benefits
+            </button>
+          </li>
+          <li className="nav-item">
+            <button 
+              className={`nav-link ${location.pathname === '/membership' ? 'active' : ''}`}
+              onClick={() => handleNavigation('/membership')}
+            >
+              Join DAO
+            </button>
+          </li>
+          <li className="nav-item">
+            <button 
+              className={`nav-link ${location.pathname === '/about' ? 'active' : ''}`}
+              onClick={() => handleNavigation('/about')}
+            >
+              About
+            </button>
+          </li>
+          <li className="nav-item">
+            <button 
+              className={`nav-link ${location.pathname === '/resources' ? 'active' : ''}`}
+              onClick={() => handleNavigation('/resources')}
+            >
+              Resources
             </button>
           </li>
         </ul>

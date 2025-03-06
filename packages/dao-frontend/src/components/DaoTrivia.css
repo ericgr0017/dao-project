@@ -1,0 +1,394 @@
+/* DaoTrivia.css */
+.dao-trivia-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 700px;
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.dao-trivia-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.dao-trivia-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.dao-trivia-content {
+  padding: 1.5rem;
+}
+
+.trivia-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.trivia-progress {
+  flex: 1;
+  margin-right: 1rem;
+}
+
+.trivia-progress span {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.progress-bar {
+  height: 8px;
+  background-color: rgba(var(--primary-rgb), 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--primary-color);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.trivia-score, .trivia-streak {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.trivia-streak {
+  color: var(--accent-color);
+}
+
+.trivia-timer {
+  margin-bottom: 1.5rem;
+}
+
+.timer-bar {
+  height: 6px;
+  background-color: rgba(var(--primary-rgb), 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.timer-fill {
+  height: 100%;
+  background-color: var(--primary-color);
+  border-radius: 3px;
+  transition: width 1s linear;
+}
+
+.timer-text {
+  display: block;
+  text-align: right;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.trivia-question {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: rgba(var(--primary-rgb), 0.05);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  transition: transform 0.3s ease;
+}
+
+.trivia-question h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.5;
+}
+
+.trivia-question.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.trivia-question.correct {
+  animation: pulse-green 0.5s ease-in-out;
+}
+
+.trivia-question.wrong {
+  animation: pulse-red 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes pulse-green {
+  0% { background-color: rgba(var(--success-rgb), 0.1); }
+  50% { background-color: rgba(var(--success-rgb), 0.3); }
+  100% { background-color: rgba(var(--success-rgb), 0.1); }
+}
+
+@keyframes pulse-red {
+  0% { background-color: rgba(var(--error-rgb), 0.1); }
+  50% { background-color: rgba(var(--error-rgb), 0.3); }
+  100% { background-color: rgba(var(--error-rgb), 0.1); }
+}
+
+.trivia-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.trivia-option {
+  padding: 1rem;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.trivia-option:hover:not(:disabled) {
+  background-color: rgba(var(--primary-rgb), 0.05);
+  transform: translateY(-2px);
+}
+
+.trivia-option:disabled {
+  cursor: default;
+}
+
+.trivia-option.correct {
+  background-color: rgba(var(--success-rgb), 0.1);
+  border-color: var(--success-color);
+  color: var(--success-color);
+}
+
+.trivia-option.wrong {
+  background-color: rgba(var(--error-rgb), 0.1);
+  border-color: var(--error-color);
+  color: var(--error-color);
+}
+
+.trivia-explanation {
+  padding: 1rem;
+  background-color: rgba(var(--primary-rgb), 0.05);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  margin-top: 1rem;
+}
+
+.trivia-explanation p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Results styles */
+.trivia-results {
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.trivia-results h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  color: var(--primary-color);
+}
+
+.results-score {
+  margin-bottom: 1.5rem;
+}
+
+.score-value {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.score-label {
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.results-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.results-stats .stat-item {
+  text-align: center;
+}
+
+.results-stats .stat-value {
+  font-size: 1.5rem;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.results-stats .stat-label {
+  font-size: 0.9rem;
+}
+
+.results-reward {
+  background-color: rgba(var(--primary-rgb), 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.results-reward h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+  color: var(--primary-color);
+}
+
+.reward-amount {
+  margin-bottom: 1rem;
+}
+
+.token-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.token-label {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  margin-left: 0.5rem;
+}
+
+.reward-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.reward-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.reward-item:last-child {
+  border-bottom: none;
+}
+
+.reward-label {
+  font-weight: 500;
+}
+
+.reward-value {
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+.results-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.play-again-btn, .close-results-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.play-again-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+}
+
+.play-again-btn:hover {
+  background-color: var(--primary-dark);
+}
+
+.close-results-btn {
+  background: none;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.close-results-btn:hover {
+  background-color: rgba(var(--primary-rgb), 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dao-trivia-container {
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .trivia-options {
+    grid-template-columns: 1fr;
+  }
+  
+  .trivia-stats {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .trivia-progress {
+    width: 100%;
+    margin-right: 0;
+  }
+  
+  .results-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .results-actions {
+    flex-direction: column;
+  }
+  
+  .play-again-btn, .close-results-btn {
+    width: 100%;
+  }
+} 

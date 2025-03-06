@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 import './Governance.css';
 
 const Governance = () => {
+  // eslint-disable-next-line no-unused-vars
   const { address, isConnected, contracts, signer, balance, stakedBalance } = useWeb3();
   const [stakeAmount, setStakeAmount] = useState('');
   const [unstakeAmount, setUnstakeAmount] = useState('');

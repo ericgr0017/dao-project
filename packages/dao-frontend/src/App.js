@@ -23,6 +23,26 @@ import Proposals from './pages/Proposals';
 import Treasury from './pages/Treasury';
 // Import Reputation component
 import Reputation from './pages/Reputation';
+// Import About page
+import About from './pages/About';
+// Import Resources page
+import Resources from './pages/Resources';
+// Import Challenges page
+import Challenges from './pages/Challenges';
+// Import Benefits page
+import Benefits from './pages/Benefits';
+// Import Learning page
+import Learning from './pages/Learning';
+// Import ChallengeDetail page
+import ChallengeDetail from './pages/ChallengeDetail';
+// Import Solutions page
+import Solutions from './pages/Solutions';
+// Import Membership page
+import Membership from './pages/Membership';
+// Import UserAnalytics page
+import UserAnalytics from './pages/UserAnalytics';
+// Import SocialFeed page
+import SocialFeed from './pages/SocialFeed';
 
 // Configure chains & providers
 const { chains, publicClient, webSocketPublicClient } = configureChains(
@@ -59,6 +79,16 @@ function App() {
                 <Route path="/proposals" element={<Proposals />} />
                 <Route path="/treasury" element={<Treasury />} />
                 <Route path="/reputation" element={<Reputation />} />
+                <Route path="/challenges" element={<Challenges />} />
+                <Route path="/challenges/:categoryId/:challengeId" element={<ChallengeDetail />} />
+                <Route path="/benefits" element={<Benefits />} />
+                <Route path="/learning" element={<Learning />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/resources" element={<Resources />} />
+                <Route path="/solutions" element={<Solutions />} />
+                <Route path="/membership" element={<Membership />} />
+                <Route path="/analytics" element={<UserAnalytics />} />
+                <Route path="/social" element={<SocialFeed />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>

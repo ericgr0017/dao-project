@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
 import { ethers } from 'ethers';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { address, isConnected, contracts, balance, stakedBalance } = useWeb3();
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   const [daoStats, setDaoStats] = useState({
     totalMembers: '0',
     treasuryBalance: '0 ETH',
@@ -24,6 +25,11 @@ const Dashboard = () => {
     proposalsVoted: '0'
   });
   const [recentProposals, setRecentProposals] = useState([]);
+  const [userImpact, setUserImpact] = useState({
+    challengesSupported: [],
+    totalContribution: '0 ETH',
+    impactScore: 0
+  });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -243,61 +249,216 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [contracts.governanceToken, contracts.proposalSystem, contracts.treasury, contracts.reputationSystem, isConnected, address, balance, stakedBalance]);
   
+  // Calculate user impact (mock data for now)
+  useEffect(() => {
+    if (isConnected) {
+      setUserImpact({
+        challengesSupported: [
+          { name: 'Climate Change', count: 3 },
+          { name: 'Education', count: 2 },
+          { name: 'Healthcare', count: 1 }
+        ],
+        totalContribution: '1.5 ETH',
+        impactScore: 78
+      });
+    }
+  }, [isConnected]);
+  
   const formatAddress = (address) => {
     if (!address) return '';
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
   
+  const getSuggestedActions = () => {
+    if (!isConnected) {
+      return [
+        {
+          title: 'Connect Your Wallet',
+          description: 'Connect your wallet to participate in the DAO',
+          action: 'Connect',
+          path: '#'
+        },
+        {
+          title: 'Learn About Benefits',
+          description: 'Discover how you can benefit from joining the DAO',
+          action: 'Learn More',
+          path: '/benefits'
+        },
+        {
+          title: 'Explore Challenges',
+          description: 'See what global challenges we\'re addressing',
+          action: 'Explore',
+          path: '/challenges'
+        }
+      ];
+    }
+
+    const actions = [];
+
+    // If user has low balance
+    if (parseFloat(userStats.balance) < 10) {
+      actions.push({
+        title: 'Get DAO Tokens',
+        description: 'Acquire tokens to increase your voting power',
+        action: 'Get Tokens',
+        path: '/treasury'
+      });
+    }
+
+    // If user has tokens but hasn't staked
+    if (parseFloat(userStats.balance) > 0 && parseFloat(userStats.stakedBalance) === 0) {
+      actions.push({
+        title: 'Stake Your Tokens',
+        description: 'Stake tokens to participate in governance',
+        action: 'Stake',
+        path: '/governance'
+      });
+    }
+
+    // If user hasn't voted recently
+    if (parseInt(userStats.proposalsVoted) < 5) {
+      actions.push({
+        title: 'Vote on Proposals',
+        description: 'Make your voice heard on active proposals',
+        action: 'Vote',
+        path: '/proposals'
+      });
+    }
+
+    // If user hasn't created proposals
+    if (parseInt(userStats.proposalsCreated) < 2) {
+      actions.push({
+        title: 'Create a Proposal',
+        description: 'Suggest a solution to a global challenge',
+        action: 'Create',
+        path: '/challenges'
+      });
+    }
+
+    // Always suggest exploring challenges
+    actions.push({
+      title: 'Explore Challenges',
+      description: 'Discover global challenges that need solutions',
+      action: 'Explore',
+      path: '/challenges'
+    });
+
+    return actions.slice(0, 3); // Return top 3 actions
+  };
+  
   return (
     <div className="dashboard-page">
       <div className="page-header">
-        <h1>DAO Dashboard</h1>
+        <h1>{isConnected ? 'Your DAO Dashboard' : 'DAO Dashboard'}</h1>
         <p className="page-description">
-          Welcome to the DAO Dashboard. Here you can view key metrics and participate in governance.
+          {isConnected 
+            ? `Welcome back! Track your impact and participation in Humanity DAO.`
+            : `Connect your wallet to join Humanity DAO and help address global challenges.`}
         </p>
       </div>
       
       <div className="dashboard-content">
+        {!isConnected && (
+          <div className="connect-banner">
+            <div className="connect-banner-content">
+              <h2>Join Humanity DAO</h2>
+              <p>Connect your wallet to participate in governance and help address humanity's greatest challenges</p>
+              <div className="connect-banner-actions">
+                <button className="primary-btn" onClick={() => {}}>Connect Wallet</button>
+                <button className="secondary-btn" onClick={() => navigate('/benefits')}>Learn About Benefits</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="dashboard-grid">
-          <div className="dashboard-card">
-            <h2>Your Information</h2>
-            {!isConnected ? (
-              <p>Connect your wallet to view your information.</p>
-            ) : isLoading ? (
-              <div className="loading">Loading your information...</div>
-            ) : (
-              <div className="user-stats">
-                <div className="user-stat">
-                  <span className="label">Address:</span>
-                  <span className="value">{formatAddress(address)}</span>
-                </div>
-                <div className="user-stat">
-                  <span className="label">Balance:</span>
-                  <span className="value">{userStats.balance} GT</span>
-                </div>
-                <div className="user-stat">
-                  <span className="label">Staked:</span>
-                  <span className="value">{userStats.stakedBalance} GT</span>
-                </div>
-                <div className="user-stat">
-                  <span className="label">Voting Power:</span>
-                  <span className="value">{userStats.votingPower}</span>
-                </div>
-                <div className="user-stat">
-                  <span className="label">Reputation:</span>
-                  <span className="value">{userStats.reputation}</span>
-                </div>
-                <div className="user-stat">
-                  <span className="label">Proposals Created:</span>
-                  <span className="value">{userStats.proposalsCreated}</span>
-                </div>
-                <div className="user-stat">
-                  <span className="label">Proposals Voted:</span>
-                  <span className="value">{userStats.proposalsVoted}</span>
+          {isConnected && (
+            <div className="dashboard-card user-profile-card">
+              <div className="user-profile-header">
+                <div className="user-avatar">{address ? address.substring(2, 4).toUpperCase() : '??'}</div>
+                <div className="user-info">
+                  <h2>Your Profile</h2>
+                  <p className="user-address">{formatAddress(address)}</p>
                 </div>
               </div>
-            )}
-          </div>
+              
+              {isLoading ? (
+                <div className="loading">Loading your information...</div>
+              ) : (
+                <div className="user-stats">
+                  <div className="user-stats-grid">
+                    <div className="user-stat-card">
+                      <div className="stat-value">{userStats.balance}</div>
+                      <div className="stat-label">Token Balance</div>
+                    </div>
+                    <div className="user-stat-card">
+                      <div className="stat-value">{userStats.stakedBalance}</div>
+                      <div className="stat-label">Staked Tokens</div>
+                    </div>
+                    <div className="user-stat-card">
+                      <div className="stat-value">{userStats.votingPower}</div>
+                      <div className="stat-label">Voting Power</div>
+                    </div>
+                    <div className="user-stat-card">
+                      <div className="stat-value">{userStats.reputation}</div>
+                      <div className="stat-label">Reputation</div>
+                    </div>
+                  </div>
+                  
+                  <div className="user-activity">
+                    <h3>Your Activity</h3>
+                    <div className="activity-stats">
+                      <div className="activity-stat">
+                        <span className="activity-label">Proposals Created:</span>
+                        <span className="activity-value">{userStats.proposalsCreated}</span>
+                      </div>
+                      <div className="activity-stat">
+                        <span className="activity-label">Proposals Voted:</span>
+                        <span className="activity-value">{userStats.proposalsVoted}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {isConnected && (
+            <div className="dashboard-card impact-card">
+              <h2>Your Impact</h2>
+              {isLoading ? (
+                <div className="loading">Calculating your impact...</div>
+              ) : (
+                <div className="impact-content">
+                  <div className="impact-score">
+                    <div className="score-circle">
+                      <span className="score-value">{userImpact.impactScore}</span>
+                    </div>
+                    <div className="score-label">Impact Score</div>
+                  </div>
+                  
+                  <div className="impact-details">
+                    <div className="impact-detail">
+                      <span className="impact-label">Total Contribution:</span>
+                      <span className="impact-value">{userImpact.totalContribution}</span>
+                    </div>
+                    
+                    <div className="impact-challenges">
+                      <h4>Challenges Supported:</h4>
+                      <div className="challenges-list">
+                        {userImpact.challengesSupported.map((challenge, index) => (
+                          <div key={index} className="challenge-item">
+                            <span className="challenge-name">{challenge.name}</span>
+                            <span className="challenge-count">{challenge.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           
           <div className="dashboard-card">
             <h2>DAO Statistics</h2>
@@ -305,28 +466,44 @@ const Dashboard = () => {
               <div className="loading">Loading DAO statistics...</div>
             ) : (
               <div className="dao-stats">
-                <div className="dao-stat">
-                  <span className="label">Treasury Balance:</span>
-                  <span className="value">{daoStats.treasuryBalance}</span>
-                </div>
-                <div className="dao-stat">
-                  <span className="label">Total Proposals:</span>
-                  <span className="value">{daoStats.totalProposals}</span>
-                </div>
-                <div className="dao-stat">
-                  <span className="label">Active Proposals:</span>
-                  <span className="value">{daoStats.activeProposals}</span>
-                </div>
-                <div className="dao-stat">
-                  <span className="label">Token Price:</span>
-                  <span className="value">{daoStats.tokenPrice}</span>
-                </div>
-                <div className="dao-stat">
-                  <span className="label">Market Cap:</span>
-                  <span className="value">{daoStats.marketCap}</span>
+                <div className="dao-stats-grid">
+                  <div className="dao-stat-card">
+                    <div className="stat-value">{daoStats.treasuryBalance}</div>
+                    <div className="stat-label">Treasury</div>
+                  </div>
+                  <div className="dao-stat-card">
+                    <div className="stat-value">{daoStats.totalProposals}</div>
+                    <div className="stat-label">Total Proposals</div>
+                  </div>
+                  <div className="dao-stat-card">
+                    <div className="stat-value">{daoStats.activeProposals}</div>
+                    <div className="stat-label">Active Proposals</div>
+                  </div>
+                  <div className="dao-stat-card">
+                    <div className="stat-value">{daoStats.totalMembers}</div>
+                    <div className="stat-label">Members</div>
+                  </div>
                 </div>
               </div>
             )}
+          </div>
+          
+          <div className="dashboard-card suggested-actions-card">
+            <h2>Suggested Actions</h2>
+            <div className="suggested-actions">
+              {getSuggestedActions().map((action, index) => (
+                <div key={index} className="action-card">
+                  <h3>{action.title}</h3>
+                  <p>{action.description}</p>
+                  <button 
+                    className="action-btn"
+                    onClick={() => navigate(action.path)}
+                  >
+                    {action.action}
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
           
           <div className="dashboard-card">

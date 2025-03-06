@@ -276,8 +276,10 @@ const Treasury = () => {
     }
   };
   
+  // Format address for display
+  // eslint-disable-next-line no-unused-vars
   const formatAddress = (address) => {
-    if (!address || typeof address !== 'string' || address.length < 10) return 'Unknown';
+    if (!address) return '';
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
   

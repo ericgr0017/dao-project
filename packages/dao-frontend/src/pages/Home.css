@@ -43,17 +43,24 @@
   margin-right: auto;
 }
 
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
 .cta-button {
   background-color: #ff4081;
   color: white;
   border: none;
   padding: 15px 40px;
-  font-size: 1.1rem;
   border-radius: 30px;
+  font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: 600;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .cta-button:hover {
@@ -303,13 +310,20 @@
 
 .secondary-button {
   background-color: transparent;
-  color: #4a148c;
-  border: 2px solid #4a148c;
+  color: white;
+  border: 2px solid white;
+  padding: 13px 38px;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
 }
 
 .secondary-button:hover {
-  background-color: rgba(74, 20, 140, 0.1);
-  transform: translateY(-2px);
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
 /* Learn More buttons */
